@@ -50,6 +50,8 @@ function sankeyDiagram() {
       width = 500,
       height = 500;
 
+  var duration = 500;
+
   var linkColor = function linkColor(d) {
     return null;
   },
@@ -126,7 +128,7 @@ function sankeyDiagram() {
     // .classed('offstage', getNodeOffstage)
     .on('click', selectNode);
 
-    nodeSel.transition().ease('linear').call(node);
+    getTransition(nodeSel).call(node);
     nodeSel.attr('class', function (d) {
       return 'node node-style-' + ((d.data || {}).style || 'default') + (d.id === selectedNode ? ' selected' : '');
     });
@@ -142,7 +144,7 @@ function sankeyDiagram() {
     linkSel.enter().append('path').attr('class', 'link').style('fill', linkColor).style('opacity', linkOpacity).on('click', selectLink);
 
     // Update
-    linkSel.call(link);
+    getTransition(linkSel).call(link);
     linkSel //.transition()
     .style('fill', linkColor).style('opacity', linkOpacity);
 
@@ -238,16 +240,24 @@ function sankeyDiagram() {
     dispatch.selectGroup.call(el, d);
   }
 
+  function getTransition(sel) {
+    if (duration === null) {
+      return sel;
+    } else {
+      return sel.transition().ease('linear').duration(duration);
+    }
+  }
+
   /* Public API */
   exports.width = function (_x) {
     if (!arguments.length) return width;
-    width = parseInt(_x);
+    width = parseInt(_x, 10);
     return this;
   };
 
   exports.height = function (_x) {
     if (!arguments.length) return height;
-    height = parseInt(_x);
+    height = parseInt(_x, 10);
     return this;
   };
 
@@ -259,6 +269,12 @@ function sankeyDiagram() {
       bottom: _x.bottom === undefined ? margin.bottom : _x.bottom,
       right: _x.right === undefined ? margin.right : _x.right
     };
+    return this;
+  };
+
+  exports.duration = function (_x) {
+    if (!arguments.length) return duration;
+    duration = _x === null ? null : parseFloat(_x);
     return this;
   };
 
@@ -380,7 +396,8 @@ exports.default = function () {
 
   function sankeyLink(selection) {
     selection.each(function (d) {
-      var link = _d2.default.select(this);
+      var link = _d2.default.select(this),
+          transition = _d2.default.transition(link);
 
       if (!this._current) {
         // first time
@@ -393,7 +410,11 @@ exports.default = function () {
       title.enter().append('title');
 
       // Update
-      link.transition().ease('linear').attrTween('d', tweenLink);
+      if (transition.attrTween) {
+        transition.attrTween('d', tweenLink);
+      } else {
+        transition.attr('d', path);
+      }
 
       link.select('title').text(linkTitle);
     });
@@ -16253,6 +16274,15 @@ function sankeyLayout() {
         G.edge(e).source = V;
         G.edge(e).target = W;
       });
+
+      // filter order to only include known nodes
+      order = order.map(function (bands) {
+        return bands.map(function (nodes) {
+          return nodes.filter(function (n) {
+            return G.node(n) !== undefined;
+          });
+        });
+      });
     }
 
     // Position and scale nodes within ranks
@@ -17036,7 +17066,10 @@ function justifiedPositioning() {
     setNodeValues(G, edgeValue, nodeDirection);
 
     var maxValue = (0, _lodash4.default)(bandValues(G, order));
-    if (maxValue <= 0) throw Error('no value');
+    if (maxValue <= 0) {
+      scale = 1;
+      return;
+    }
 
     scale = size[1] / maxValue;
     if (whitespace != 1) scale *= 1 - whitespace;
