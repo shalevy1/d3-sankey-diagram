@@ -1,501 +1,528 @@
 <html>
-  <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.1.1/normalize.min.css">
-    <link rel="stylesheet" href="codemirror-5.15.2/lib/codemirror.css">
-    <style>
-     @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300);
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.1.1/normalize.min.css">
+  <link rel="stylesheet" href="codemirror-5.15.2/lib/codemirror.css">
+  <title>d3-sankey-diagram</title>
+  <style>
+    @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300);
 
-     html {
-       overflow-x: hidden;
-     }
+    html {
+      overflow-x: hidden;
+    }
 
-     body {
-       background-color: #eeeeee;
-       margin: 0 auto 4em auto;
-       width: 1024px;
-       color: #333;
-       font-family: 'Source Sans Pro', sans-serif;
-     }
+    body {
+      background-color: #eeeeee;
+      margin: 0 auto 4em auto;
+      width: 1024px;
+      color: #333;
+      font-family: 'Source Sans Pro', sans-serif;
+    }
 
-     h1 {
-       font-weight: normal;
-       font-size: 2.5em;
-     }
+    h1 {
+      font-weight: normal;
+      font-size: 2.5em;
+    }
 
-     h2 {
-       margin-top: 2.5em;
-     }
+    h2 {
+      margin-top: 2.5em;
+    }
 
-     a {
-       color: #4078c0;
-       text-decoration: none;
-     }
+    a {
+      color: #4078c0;
+      text-decoration: none;
+    }
 
-     a:hover, a:active {
-       text-decoration: underline;
-     }
+    a:hover, a:active {
+      text-decoration: underline;
+    }
 
-     .sankey {
-       background-color: white;
-       border-radius: 7px;
-       position: relative;
-     }
+    .sankey {
+      background-color: white;
+      border-radius: 7px;
+      position: relative;
+    }
 
-     #sankey {
-       height: 600px;
-     }
+    #sankey {
+      height: 600px;
+    }
 
-     #try-sankey, #try {
-       height: 400px;
-     }
+    #try-sankey, #try {
+      height: 400px;
+    }
 
-     #try .CodeMirror {
-       height: 100%;
-       border-radius: 7px;
-     }
+    #try .CodeMirror {
+      height: 100%;
+      border-radius: 7px;
+    }
 
-     .source {
-       margin: 0.5em;
-       font-size: small;
-       position: absolute;
-       bottom: 0;
-       right: 0;
-       color: #555;
-     }
+    .source {
+      margin: 0.5em;
+      font-size: small;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      color: #555;
+    }
 
-     .source a {
-       color: #558;
-     }
+    .source a {
+      color: #558;
+    }
 
-     svg .link {
-       opacity: 0.8;
-       fill: steelblue;
-     }
+    svg .link {
+      opacity: 0.8;
+      fill: steelblue;
+    }
 
-     svg .link:hover {
-       opacity: 1;
-     }
+    svg .link:hover {
+      opacity: 1;
+    }
 
-     svg g.sankey {
-       font-size: 10pt;
-     }
-     svg .node line {
-       stroke-width: 1px;
-       stroke: #000;
-     }
-     svg .node-type-process line {
-       stroke-width: 4px;
-       stroke: #888;
-     }
+    svg g.sankey {
+      font-size: 10pt;
+    }
+    svg .node line {
+      stroke-width: 1px;
+      stroke: #000;
+    }
+    svg .node-type-process line {
+      stroke-width: 4px;
+      stroke: #888;
+    }
 
-     svg .group rect {
-       fill: #eee;
-       stroke: #bbb;
-       stroke-width: 0.5px;
-     }
+    svg .group rect {
+      fill: #eee;
+      stroke: #bbb;
+      stroke-width: 0.5px;
+    }
 
-     svg .group text {
-       fill: #999;
-     }
+    svg .group text {
+      fill: #999;
+    }
 
-     .row {
-       display: flex;
-       margin: 0 -1em;
-     }
+    .row {
+      display: flex;
+      margin: 0 -1em;
+    }
 
-     .row-full-width {
-       margin: 1rem -9999rem;
-       padding: 1rem 9998rem;
-       padding-top: 0;
-       background-color: rgba(31, 119, 180, 0.2);
-     }
+    .row-full-width {
+      margin: 1rem -9999rem;
+      padding: 1rem 9998rem;
+      padding-top: 0;
+      background-color: rgba(31, 119, 180, 0.2);
+    }
 
-     .row-full-width:first-child {
-       margin-top: 0;
-     }
+    .row-full-width:first-child {
+      margin-top: 0;
+    }
 
-     .box {
-       flex: 1 0 0;
-       padding: 0 1em;
-     }
+    .box {
+      flex: 1 0 0;
+      padding: 0 1em;
+    }
 
-     .box .sankey {
-       height: 200px;
-     }
+    .box .sankey {
+      height: 200px;
+    }
 
-     .box h3 {
-       margin-bottom: 0.5em;
-     }
+    .box h3 {
+      margin-bottom: 0.5em;
+    }
 
-     .box p {
-       font-size: 0.9rem;
-     }
+    .box p {
+      font-size: 0.9rem;
+    }
 
-     .btn-group {
-       display: flex;
-     }
+    .btn-group {
+      display: flex;
+    }
 
-     .btn-group button {
-       margin: 0;
-       padding: 0.3em 0.5em;
-       background: transparent;
-       border: 1px solid white;
-       border-radius: 5px;
-       cursor: pointer;
-     }
+    .btn-group button {
+      margin: 0;
+      padding: 0.3em 0.5em;
+      background: transparent;
+      border: 1px solid white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-     .btn-group button + button {
-       margin-left: -1px;
-     }
+    .btn-group button + button {
+      margin-left: -1px;
+    }
 
-     .btn-group button:first-child:not(:last-child) {
-       border-top-right-radius: 0;
-       border-bottom-right-radius: 0;
-     }
+    .btn-group button:first-child:not(:last-child) {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
 
-     .btn-group button:not(:first-child):not(:last-child) {
-       border-radius: 0;
-     }
+    .btn-group button:not(:first-child):not(:last-child) {
+      border-radius: 0;
+    }
 
-     .btn-group button:last-child:not(:first-child) {
-       border-top-left-radius: 0;
-       border-bottom-left-radius: 0;
-     }
+    .btn-group button:last-child:not(:first-child) {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
 
-     .btn-group button.active {
-       background: #eee;
-       cursor: default;
-     }
+    .btn-group button.active {
+      background: #eee;
+      cursor: default;
+    }
 
-     .btn-group button.active:hover {
-       background: #eee;
-     }
+    .btn-group button.active:hover {
+      background: #eee;
+    }
 
-     .btn-group button:hover {
-       background: white;
-     }
-    </style>
-  </head>
-  <body>
-    <div class="row row-full-width" >
+    .btn-group button:hover {
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="row row-full-width" >
+  </div>
+  <!-- <small>ricklupton / <a href="https://github.com/ricklupton/d3-sankey-diagram">d3-sankey-diagram</a></small> -->
+  <h1>Sankey diagrams</h1>
+
+  <div id="sankey" class="sankey">
+    <svg width="1000" height="600"></svg>
+    <p class="source">Source: based on <a href="https://www.gov.uk/government/statistics/energy-chapter-1-digest-of-united-kingdom-energy-statistics-dukes">Department of Energy & Climate Change</a> statistics (2014).</p>
+  </div>
+
+  <script src="//d3js.org/d3.v4.min.js" charset="utf-8"></script>
+  <script src="d3-sankey-diagram.js" charset="utf-8"></script>
+  <script>
+    var layout = d3.sankey()
+                  .extent([[100, 10], [840, 580]]);
+
+    var diagram = d3.sankeyDiagram()
+                    .linkTitle(d3.sankeyLinkTitle(function (d) { return d.title; },
+                                                  function(d) { return d.title; },
+                                                  d3.format('.3s')))
+                    .linkColor(function(d) { return d.color; });
+
+    d3.json('uk_energy.json', function(energy) {
+      layout.ordering(energy.order);
+      var el = d3.select('#sankey svg')
+                .datum(layout(energy))
+                .call(diagram.groups(energy.groups));
+    });
+  </script>
+
+  <p>
+    <a href="https://en.wikipedia.org/wiki/Sankey_diagram">Sankey diagrams</a> show
+    the magnitude of flows between processes using the width of the lines. The
+    example above shows the UK's energy balance, inspired by <a href="https://bost.ocks.org/mike/sankey/">Mike Bostock's example</a>.
+    This diagram is produced using a new package, <a href="https://github.com/ricklupton/d3-sankey-diagram">d3-sankey-diagram</a>,
+    which improves on the <a href="https://github.com/d3/d3-plugins/tree/master/sankey">existing d3 sankey plugin</a> in several ways &mdash; in particular:
+  </p>
+
+  <div class="row row-full-width">
+    <div class="box">
+      <h3>Return loops</h3>
+      <div class="sankey" id="demo-return-loops" ><svg width="300" height="200" ></svg></div>
+      <p>Nodes <i>e</i> and <i>f</i> are flowing from right to left.</p>
     </div>
-    <!-- <h1>ricklupton / <a href="https://github.com/ricklupton/d3-sankey-diagram">d3-sankey-diagram</a></h1> -->
-    <h1>Sankey diagrams</h1>
-
-    <div id="sankey" class="sankey">
-      <p class="source">Source: based on <a href="https://www.gov.uk/government/statistics/energy-chapter-1-digest-of-united-kingdom-energy-statistics-dukes">Department of Energy & Climate Change</a> statistics (2014).</p>
+    <div class="box">
+      <h3>Multiple types</h3>
+      <div class="sankey" id="demo-multiple-types" ><svg width="300" height="200" ></svg></div>
+      <p>Multiple types of flow can pass between the same nodes.</p>
+      <p class="btn-group">
+        <button id="types-align" class="active">Align types</button>
+        <button id="types-noalign" >Minimise crossings</button>
+      </p>
     </div>
+    <div class="box" >
+      <h3>Dummy nodes</h3>
+      <div class="sankey" id="demo-dummy-nodes" ><svg width="300" height="200" ></svg></div>
+      <p>Nodes <i>d</i> and <i>e</i> are constrained to be in the same vertical layer, so 'dummy nodes' are added between <i>a</i> and <i>e</i>.</p>
+      <p class="btn-group">
+        <button id="dummy-samerank" class="active">Same ranks</button>
+        <button id="dummy-none">No constraint</button>
+      </p>
+    </div>
+  </div>
 
-    <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <script src="d3-sankey-diagram.js" charset="utf-8"></script>
-    <script>
-     var diagram = sankeyDiagram()
-        .width(1000)
-        .height(600)
-        .margins({ left: 100, right: 160, top: 10, bottom: 10 })
-        .nodeTitle(function(d) { return d.data.title !== undefined ? d.data.title : d.id; })
-        .linkTypeTitle(function(d) { return d.data.title; })
-        .linkColor(function(d) { return d.data.color; });
+  <script>
+    var examples = {
+      'very-simple': {
+        nodes: [
+          { id: 'a' },
+          { id: 'b' },
+        ],
+        links: [
+          { source: 'a', target: 'b', value: 1 }
+        ],
+      },
 
-     d3.json('uk_energy.json', function(energy) {
-      var el = d3.select('#sankey')
-                 .datum(energy)
-                 .call(diagram);
+      'return-loops': {
+          nodes: [
+            { id: 'a', title: 'a', direction: 'r' },
+            { id: 'b', title: 'b', direction: 'r' },
+            { id: 'c', title: 'c', direction: 'r' },
+            { id: 'd', title: 'd', direction: 'r' },
+            { id: 'e', title: 'e', direction: 'l' },
+            { id: 'f', title: 'f', direction: 'l' },
+          ],
+          links: [
+            { source: 'a', target: 'b', value: 1 },
+            { source: 'b', target: 'c', value: 1.2 },
+            { source: 'c', target: 'd', value: 1 },
+            { source: 'c', target: 'e', value: 0.2 },
+            { source: 'e', target: 'f', value: 0.2 },
+            { source: 'f', target: 'b', value: 0.2 },
+          ],
+          order: [
+            [['a'], []],
+            [['b'], ['f']],
+            [['c'], ['e']],
+            [['d'], []]
+          ]
+      },
+
+      'multiple-types': {
+        nodes: [
+          { id: 'a', title: 'a' },
+          { id: 'b', title: 'b' },
+          { id: 'c', title: 'c' },
+          { id: 'x', title: 'd' },
+          { id: 'y', title: 'e' },
+        ],
+        links: [
+          { source: 'a', target: 'x', value: 1.0, type: 'x' },
+          { source: 'a', target: 'y', value: 0.7, type: 'y' },
+          { source: 'a', target: 'y', value: 0.3, type: 'z' },
+
+          { source: 'b', target: 'x', value: 2.0, type: 'x' },
+          { source: 'b', target: 'y', value: 0.3, type: 'y' },
+          { source: 'b', target: 'y', value: 0.9, type: 'z' },
+
+          { source: 'x', target: 'c', value: 3.0, type: 'x' },
+          { source: 'y', target: 'c', value: 1.0, type: 'y' },
+          { source: 'y', target: 'c', value: 1.2, type: 'z' },
+        ],
+        alignLinkTypes: true
+      },
+
+      'dummy-nodes': {
+        nodes: [
+          { id: 'a', title: 'a', direction: 'r' },
+          { id: 'b', title: 'b', direction: 'r' },
+          { id: 'c', title: 'c', direction: 'r' },
+          { id: 'd', title: 'd', direction: 'r' },
+          { id: 'e', title: 'e', direction: 'r' },
+        ],
+        links: [
+          { source: 'a', target: 'b', type: 'm', value: 1 },
+          { source: 'b', target: 'c', type: 'm', value: 1 },
+          { source: 'c', target: 'd', type: 'm', value: 1 },
+          { source: 'a', target: 'e', type: 'm', value: 0.2 },
+        ],
+        rankSets: [
+          { type: 'same', nodes: ['d', 'e'] }
+        ]
+      },
+
+      'bands-groups': {
+        nodes: [
+          { id: 'a', title: 'a' },
+          { id: 'b', title: 'b' },
+          { id: 'c', title: 'c' },
+          { id: 'd', title: 'd' },
+          { id: 'e', title: 'e' },
+          { id: 'f', title: 'Node in bottom band' },
+        ],
+        links: [
+          { source: 'a', target: 'c', value: 1.0, type: '1' },
+          { source: 'b', target: 'c', value: 2.0, type: '1' },
+          { source: 'c', target: 'd', value: 0.9, type: '2' },
+          { source: 'c', target: 'e', value: 2.1, type: '2' },
+          { source: 'b', target: 'f', value: 0.5, type: '1' },
+        ],
+        groups: [
+          { id: 'g', nodes: ['a', 'b'], title: 'Group of nodes in top band' },
+        ],
+        order: [
+          [['a', 'b'], []],
+          [['c'], ['f']],
+          [['d', 'e'], []],
+        ]
+      }
+    };
+
+   // Save JSON of examples before layout creates circular references
+   var examplesJSON = {};
+   for (var k in examples) {
+     examplesJSON[k] = JSON.stringify(examples[k], null, 2);
+   }
+
+   var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+   function smallSankey(marginTop) {
+     return function(el) {
+       el.call(d3.sankeyDiagram()
+                 .nodeTitle(function(d) { return d.title || d.id; })
+                 .linkColor(function(d) { return color(d.type); }));
+     };
+   }
+
+   function alignLinkTypes(layout, align) {
+     return layout
+       .sourceId(function(d) { return { id: typeof d.source === "object" ? d.source.id : d.source,
+                                        port: align ? d.type : null }; })
+       .targetId(function(d) { return { id: typeof d.target === "object" ? d.target.id : d.target,
+                                        port: align ? d.type : null }; });
+   }
+
+   var smallLayout1 = d3.sankey().extent([[50, 10], [250, 190]]);
+   var smallLayout2 = d3.sankey()
+                        .extent([[50, 10], [250, 190]]);
+   alignLinkTypes(smallLayout2, true);
+   var smallLayout3 = d3.sankey()
+                        .rankSets(examples['dummy-nodes'].rankSets)
+                        .extent([[50, 10], [250, 190]]);
+
+    d3.select('#demo-return-loops svg')
+        .datum(smallLayout1(examples['return-loops']))
+        .call(smallSankey());
+
+    d3.select('#demo-multiple-types svg')
+        .datum(smallLayout2(examples['multiple-types']))
+        .call(smallSankey(10));
+
+    d3.select('#demo-dummy-nodes svg')
+        .datum(smallLayout3(examples['dummy-nodes']))
+        .call(smallSankey(10));
+
+    d3.select('#types-align').on('click', onClickAlign(true));
+    d3.select('#types-noalign').on('click', onClickAlign(false));
+
+    d3.select('#dummy-samerank').on('click', onClickDummy(true));
+    d3.select('#dummy-none').on('click', onClickDummy(false));
+
+
+    function onClickAlign(align) {
+      return function(e) {
+        d3.select('#types-align').classed('active', align);
+        d3.select('#types-noalign').classed('active', !align);
+        d3.select('#demo-multiple-types svg')
+          .datum(alignLinkTypes(smallLayout2, align)(examples['multiple-types']))
+          .transition()
+          .duration(600)
+          .call(smallSankey(10));
+      }
+    }
+
+    function onClickDummy(align) {
+      return function(e) {
+        d3.select('#dummy-samerank').classed('active', align);
+        d3.select('#dummy-none').classed('active', !align);
+        var eg = examples['dummy-nodes'];
+        d3.select('#demo-dummy-nodes svg')
+          .datum(smallLayout3.rankSets(align ? eg.rankSets : [])(eg))
+          .transition()
+          .call(smallSankey(10));
+      }
+    }
+  </script>
+
+  <h2>Getting started</h2>
+
+  <p>
+    Install using <a href="https://www.npmjs.com/package/d3-sankey-diagram">npm</a>,
+    or download the latest version <a href="https://github.com/ricklupton/d3-sankey-diagram/releases/latest">from Github</a>.
+  </p>
+
+  <p>
+    <img src="http://jupyter.org/assets/nav_logo.svg" /><br/>
+    Use Jupyter notebook? Try <a href="https://github.com/ricklupton/ipysankeywidget">ipysankeywidget</a>,
+    an interactive widget built on this d3 diagram.
+  </p>
+
+  <h2>Documentation</h2>
+  <p>API docs are on the <a href="https://github.com/ricklupton/d3-sankey-diagram/wiki">wiki</a>.</p>
+
+  <h2>Try it!</h2>
+
+  <p>
+    Edit the JSON Sankey data below then click <button id="try-update">Update</button>.
+    Or try an example:
+    <select id="try-examples">
+      <option value="very-simple">Very simple</option>
+      <option value="return-loops">Return loops</option>
+      <option value="multiple-types" >Multiple types</option>
+      <option value="dummy-nodes" >Dummy nodes</option>
+      <option value="bands-groups" >Bands and groups</option>
+    </select>
+  </p>
+
+  <p id="error" ></p>
+
+  <div class="row" >
+    <div class="box" id="try" ></div>
+    <div class="box sankey" id="try-sankey"><svg width="500" height="400" ></svg></div>
+  </div>
+
+  <script src="codemirror-5.15.2/lib/codemirror.js"></script>
+  <script src="codemirror-5.15.2/mode/javascript/javascript.js"></script>
+  <script>
+    var cm = CodeMirror(document.querySelector('#try'), {
+      value: examplesJSON['very-simple'],
+      mode: { name: 'javascript', json: true },
+      lineNumbers: true
+    });
+
+    var tryColor = d3.scaleOrdinal(d3.schemeCategory10);
+    var tryLayout = d3.sankey()
+                      .extent([[50, 30], [400, 370]]);
+    var tryDiagram = d3.sankeyDiagram()
+                      .nodeTitle(function(d) { return d.title || d.id; })
+                      .linkColor(function(d) { return d.color || tryColor(d.type); });
+
+   function updateTry(json) {
+     try {
+       var value = JSON.parse(json);
+       d3.select('#error').text('');
+     } catch (e) {
+       d3.select('#error').text(e);
+       return;
+     }
+
+     tryLayout.ordering(value.order || null);
+     alignLinkTypes(tryLayout, value.alignLinkTypes);
+     d3.select('#try-sankey svg')
+       .datum(tryLayout.scale(null)(value))
+       .transition()
+       .duration(600)
+       .call(tryDiagram);
+   }
+
+   updateTry(examplesJSON['very-simple']);
+
+   d3.select('#try-update')
+     .on('click', function() { updateTry(cm.getValue()); });
+
+   d3.select('#try-examples')
+     .on('change', function() {
+       var example = examplesJSON[d3.event.target.value];
+       if (example) {
+         cm.setValue(example);
+         updateTry(example);
+       }
      });
-    </script>
+  </script>
 
-    <p>
-      <a href="https://en.wikipedia.org/wiki/Sankey_diagram">Sankey diagrams</a> show
-      the magnitude of flows between processes using the width of the lines. The
-      example above shows the UK's energy balance, inspired by <a href="https://bost.ocks.org/mike/sankey/">Mike Bostock's example</a>.
-      This diagram is produced using a new package, <a href="https://github.com/ricklupton/d3-sankey-diagram">d3-sankey-diagram</a>,
-      which improves on the <a href="https://github.com/d3/d3-plugins/tree/master/sankey">existing d3 sankey plugin</a> in several ways &mdash; in particular:
-    </p>
+  <h2>About</h2>
 
-    <div class="row row-full-width">
-      <div class="box">
-        <h3>Return loops</h3>
-        <div class="sankey" id="demo-return-loops" ></div>
-        <p>Nodes <i>e</i> and <i>f</i> are flowing from right to left.</p>
-      </div>
-      <div class="box">
-        <h3>Multiple types</h3>
-        <div class="sankey" id="demo-multiple-types" ></div>
-        <p>Multiple types of flow can pass between the same nodes.</p>
-        <p class="btn-group">
-          <button id="types-align" class="active">Align types</button>
-          <button id="types-noalign" >Minimise crossings</button>
-        </p>
-      </div>
-      <div class="box" >
-        <h3>Dummy nodes</h3>
-        <div class="sankey" id="demo-dummy-nodes" ></div>
-        <p>Nodes <i>d</i> and <i>e</i> are constrained to be in the same vertical layer, so 'dummy nodes' are added between <i>a</i> and <i>e</i>.</p>
-        <p class="btn-group">
-          <button id="dummy-samerank" class="active">Same ranks</button>
-          <button id="dummy-none" >No constraint</button>
-        </p>
-      </div>
-    </div>
-
-    <script>
-     var color = d3.scale.category10();
-
-     function smallSankey(marginTop) {
-       return function(el) {
-         el.call(sankeyDiagram()
-           .width(300).height(200)
-           .nodeTitle(function(d) { return d.data.title || d.id; })
-           .linkColor(function(d) { return color(d.data.type); })
-           .margins({ left: 30, right: 20, top: marginTop || 0, bottom: 10 }));
-       };
-     }
-
-     var examples = {
-       'very-simple': {
-         nodes: [
-           { id: 'a' },
-           { id: 'b' },
-         ],
-         links: [
-           { source: 'a', target: 'b', value: 1 }
-         ],
-       },
-
-       'return-loops': {
-           nodes: [
-             { id: 'a', title: 'a', direction: 'r' },
-             { id: 'b', title: 'b', direction: 'r' },
-             { id: 'c', title: 'c', direction: 'r' },
-             { id: 'd', title: 'd', direction: 'r' },
-             { id: 'e', title: 'e', direction: 'l' },
-             { id: 'f', title: 'f', direction: 'l' },
-           ],
-           links: [
-             { source: 'a', target: 'b', value: 1 },
-             { source: 'b', target: 'c', value: 1.2 },
-             { source: 'c', target: 'd', value: 1 },
-             { source: 'c', target: 'e', value: 0.2 },
-             { source: 'e', target: 'f', value: 0.2 },
-             { source: 'f', target: 'b', value: 0.2 },
-           ],
-           order: [
-             [['a'], []],
-             [['b'], ['f']],
-             [['c'], ['e']],
-             [['d'], []]
-           ]
-       },
-
-       'multiple-types': {
-         nodes: [
-           { id: 'a', title: 'a' },
-           { id: 'b', title: 'b' },
-           { id: 'c', title: 'c' },
-           { id: 'x', title: 'd' },
-           { id: 'y', title: 'e' },
-         ],
-         links: [
-           { source: 'a', target: 'x', value: 1.0, type: 'x' },
-           { source: 'a', target: 'y', value: 0.7, type: 'y' },
-           { source: 'a', target: 'y', value: 0.3, type: 'z' },
-
-           { source: 'b', target: 'x', value: 2.0, type: 'x' },
-           { source: 'b', target: 'y', value: 0.3, type: 'y' },
-           { source: 'b', target: 'y', value: 0.9, type: 'z' },
-
-           { source: 'x', target: 'c', value: 3.0, type: 'x' },
-           { source: 'y', target: 'c', value: 1.0, type: 'y' },
-           { source: 'y', target: 'c', value: 1.2, type: 'z' },
-         ],
-         alignLinkTypes: true
-       },
-
-       'dummy-nodes': {
-         nodes: [
-           { id: 'a', title: 'a', direction: 'r' },
-           { id: 'b', title: 'b', direction: 'r' },
-           { id: 'c', title: 'c', direction: 'r' },
-           { id: 'd', title: 'd', direction: 'r' },
-           { id: 'e', title: 'e', direction: 'r' },
-         ],
-         links: [
-           { source: 'a', target: 'b', type: 'm', value: 1 },
-           { source: 'b', target: 'c', type: 'm', value: 1 },
-           { source: 'c', target: 'd', type: 'm', value: 1 },
-           { source: 'a', target: 'e', type: 'm', value: 0.2 },
-         ],
-         rankSets: [
-           { type: 'same', nodes: ['d', 'e'] }
-         ]
-       },
-
-       'bands-groups': {
-         nodes: [
-           { id: 'a', title: 'a' },
-           { id: 'b', title: 'b' },
-           { id: 'c', title: 'c' },
-           { id: 'd', title: 'd' },
-           { id: 'e', title: 'e' },
-           { id: 'f', title: 'Node in bottom band' },
-         ],
-         links: [
-           { source: 'a', target: 'c', value: 1.0, type: '1' },
-           { source: 'b', target: 'c', value: 2.0, type: '1' },
-           { source: 'c', target: 'd', value: 0.9, type: '2' },
-           { source: 'c', target: 'e', value: 2.1, type: '2' },
-           { source: 'b', target: 'f', value: 0.5, type: '1' },
-         ],
-         groups: [
-           { id: 'g', nodes: ['a', 'b'], title: 'Group of nodes in top band' },
-         ],
-         order: [
-           [['a', 'b'], []],
-           [['c'], ['f']],
-           [['d', 'e'], []],
-         ]
-       }
-     }
-
-     d3.select('#demo-return-loops')
-         .datum(examples['return-loops'])
-         .call(smallSankey());
-
-     d3.select('#demo-multiple-types')
-         .datum(examples['multiple-types'])
-         .call(smallSankey(10));
-
-     d3.select('#demo-dummy-nodes')
-         .datum(examples['dummy-nodes'])
-         .call(smallSankey(10));
-
-     d3.select('#types-align').on('click', onClickAlign(true));
-     d3.select('#types-noalign').on('click', onClickAlign(false));
-
-     d3.select('#dummy-samerank').on('click', onClickDummy(true));
-     d3.select('#dummy-none').on('click', onClickDummy(false));
-
-
-     function onClickAlign(align) {
-       return function(e) {
-         d3.select('#types-align').classed({active: align});
-         d3.select('#types-noalign').classed({active: !align});
-         examples['multiple-types'].alignLinkTypes = align;
-         d3.select('#demo-multiple-types').call(smallSankey(10));
-       }
-     }
-
-     function onClickDummy(align) {
-       return function(e) {
-         d3.select('#dummy-samerank').classed({active: align});
-         d3.select('#dummy-none').classed({active: !align});
-         var eg = examples['dummy-nodes'];
-         if (align) {
-           eg.rankSets = eg.rankSets || eg._rankSets;
-         } else {
-           eg._rankSets = eg.rankSets;
-           eg.rankSets = undefined;
-         }
-         d3.select('#demo-dummy-nodes').call(smallSankey(10));
-       }
-     }
-    </script>
-
-    <h2>Getting started</h2>
-
-    <p>
-      Install using <a href="https://www.npmjs.com/package/d3-sankey-diagram">npm</a>,
-      or download the latest version <a href="https://github.com/ricklupton/d3-sankey-diagram/releases/latest">from Github</a>.
-    </p>
-
-    <p>
-      <img src="http://jupyter.org/assets/nav_logo.svg" /><br/>
-      Use Jupyter notebook? Try <a href="https://github.com/ricklupton/ipysankeywidget">ipysankeywidget</a>,
-      an interactive widget built on this d3 diagram.
-    </p>
-
-    <h2>Documentation</h2>
-    <p>API docs are on the <a href="https://github.com/ricklupton/d3-sankey-diagram/wiki">wiki</a>.</p>
-
-    <h2>Try it!</h2>
-
-    <p>
-      Edit the JSON Sankey data below then click <button id="try-update">Update</button>.
-      Or try an example:
-      <select id="try-examples">
-        <option value="very-simple">Very simple</option>
-        <option value="return-loops">Return loops</option>
-        <option value="multiple-types" >Multiple types</option>
-        <option value="dummy-nodes" >Dummy nodes</option>
-        <option value="bands-groups" >Bands and groups</option>
-      </select>
-    </p>
-
-    <p id="error" ></p>
-
-    <div class="row" >
-      <div class="box" id="try" ></div>
-      <div class="box sankey" id="try-sankey"></div>
-    </div>
-
-    <script src="codemirror-5.15.2/lib/codemirror.js"></script>
-    <script src="codemirror-5.15.2/mode/javascript/javascript.js"></script>
-    <script>
-     var cm = CodeMirror(document.querySelector('#try'), {
-       value: JSON.stringify(examples['very-simple'], null, 2),
-       mode: { name: 'javascript', json: true },
-       lineNumbers: true
-     });
-
-     var tryColor = d3.scale.category10();
-     var tryDiagram = sankeyDiagram()
-       .width(500).height(400)
-       .nodeTitle(function(d) { return d.data.title || d.id; })
-       .linkColor(function(d) { return d.data.color || tryColor(d.data.type); })
-       .margins({ left: 50, right: 50, top: 30, bottom: 10 });
-
-     function updateTry(value) {
-       d3.select('#try-sankey')
-         .datum(value)
-         .call(tryDiagram.scale(null));
-     }
-
-     updateTry(examples['very-simple']);
-
-     d3.select('#try-update')
-       .on('click', function() {
-         var text = cm.getValue();
-         try {
-           var value = JSON.parse(text);
-           updateTry(value);
-           d3.select('#error').text('');
-         } catch (e) {
-           d3.select('#error').text(e);
-         }
-       });
-
-     d3.select('#try-examples')
-       .on('change', function() {
-         var example = d3.event.target.value;
-         if (examples[example]) {
-           cm.setValue(JSON.stringify(examples[example], null, 2));
-           updateTry(examples[example]);
-         }
-       });
-    </script>
-
-    <h2>About</h2>
-
-    <p>
-      This library has been developed by <a href="http://www.uselessgroup.org/about-us/current-people/dr-rick-lupton">Rick Lupton</a> in the <a href="http://www.uselessgroup.org">Use Less Group</a> at
-      the University of Cambridge. We made it to draw Sankey diagrams in the online <a href="http://www.uselessgroup.org/research/themes/whole-systems-thinking/foreseer-integrated-resource-analysis">Foreseer tool</a>,
-      which helps to explore the relationships between different resources:
+  <p>
+    This library has been developed by <a href="http://www.uselessgroup.org/about-us/current-people/dr-rick-lupton">Rick Lupton</a> in the <a href="http://www.uselessgroup.org">Use Less Group</a> at
+    the University of Cambridge. We made it to draw Sankey diagrams in the online <a href="http://www.uselessgroup.org/research/themes/whole-systems-thinking/foreseer-integrated-resource-analysis">Foreseer tool</a>,
+    which helps to explore the relationships between different resources:
       water, land and energy.
-    </p>
+  </p>
 
-    <p>
-      d3-sankey-diagram uses the MIT licence.
-    </p>
+  <p>
+    d3-sankey-diagram uses the MIT licence.
+  </p>
 
     <a href="https://github.com/ricklupton/d3-sankey-diagram"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
   </body>
